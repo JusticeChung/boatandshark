@@ -7,46 +7,75 @@
     <style>
         body {
             background-color: #001220;
-            background-image: linear-gradient(to bottom, #001220, #004d7a);
+            background-image: linear-gradient(to bottom, #001220, #002b4a);
             color: #e0f7fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
         }
+        
+        /* 預設：淺海區 (藍色主題) */
         #game-container {
             width: 100%; max-width: 850px;
             background: rgba(0, 20, 40, 0.85);
-            border: 2px solid #ff4d4d; border-radius: 15px; padding: 30px;
-            box-shadow: 0 0 25px rgba(255, 77, 77, 0.4); text-align: center; position: relative;
+            border: 2px solid #00e5ff; 
+            border-radius: 15px; padding: 30px;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.4); 
+            text-align: center; position: relative;
+            transition: all 0.8s ease; /* 變色動畫過渡 */
         }
-        h1 { color: #ff4d4d; text-shadow: 0 0 10px rgba(255, 77, 77, 0.6); margin-top: 0; }
+        #game-container h1 { 
+            color: #00e5ff; 
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.6); 
+            margin-top: 0; 
+            transition: all 0.8s ease;
+        }
+        #track-container {
+            font-size: 2em; letter-spacing: 2px; margin-bottom: 20px;
+            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 30px; 
+            border: 1px solid #00e5ff;
+            overflow: hidden; white-space: nowrap;
+            transition: all 0.8s ease;
+        }
+
+        /* 觸發：深海區 (紅色主題) */
+        #game-container.deep-sea {
+            border-color: #ff4d4d;
+            box-shadow: 0 0 35px rgba(255, 77, 77, 0.6);
+            background: rgba(40, 0, 10, 0.85);
+        }
+        #game-container.deep-sea h1 {
+            color: #ff4d4d;
+            text-shadow: 0 0 10px rgba(255, 77, 77, 0.6);
+        }
+        #game-container.deep-sea #track-container {
+            border-color: #ff4d4d;
+            background: rgba(20, 0, 0, 0.6);
+        }
         
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .edit-btn { background-color: transparent; border: 1px solid #80deea; color: #80deea; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         .edit-btn:hover { background-color: #80deea; color: #001f3f; }
 
-        /* 軌道與狀態列 */
+        /* 狀態列 */
         #status-bar {
             background: rgba(0, 0, 0, 0.5); padding: 10px; border-radius: 10px; margin-bottom: 15px;
             display: flex; justify-content: space-between; font-weight: bold; color: #ffcc00;
-        }
-        #track-container {
-            font-size: 2em; letter-spacing: 2px; margin-bottom: 20px;
-            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 30px; border: 1px solid #ff4d4d;
-            overflow: hidden; white-space: nowrap;
         }
         
         /* 鯊魚手段按鈕 */
         #shark-abilities { display: flex; justify-content: center; margin-bottom: 20px; gap: 15px; }
         .ability-btn {
-            background-color: #4a0000; color: #ff9999; border: 2px solid #ff4d4d;
+            background-color: #003366; color: #80deea; border: 2px solid #00e5ff;
             border-radius: 10px; padding: 12px 20px; cursor: pointer; font-weight: bold; flex-grow: 1;
             transition: all 0.2s; font-size: 1.05em;
         }
-        .ability-btn:hover:not(:disabled) { background-color: #ff4d4d; color: #fff; }
-        .ability-btn:disabled { opacity: 0.4; cursor: not-allowed; border-color: #555; background-color: #222; color: #777;}
+        .ability-btn:hover:not(:disabled) { background-color: #00e5ff; color: #001f3f; }
+        .ability-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; background-color: #222; color: #777;}
         .ability-btn.active { background-color: #ffcc00; color: #000; border-color: #ffcc00; box-shadow: 0 0 15px #ffcc00; }
-        .ability-btn.danger { background-color: #800000; color: #fff; animation: pulse 2s infinite; }
+        
+        #game-container.deep-sea .ability-btn { border-color: #ff4d4d; color: #ff9999; background-color: #4a0000; }
+        #game-container.deep-sea .ability-btn.danger { background-color: #800000; color: #fff; animation: pulse 2s infinite; }
 
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
@@ -82,15 +111,22 @@
             flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .modal-content {
-            background: #001a33; border: 2px solid #ff4d4d; border-radius: 15px; padding: 30px;
-            max-width: 650px; width: 100%; text-align: center; box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
+            background: #001a33; border: 2px solid #00e5ff; border-radius: 15px; padding: 30px;
+            max-width: 650px; width: 100%; text-align: center; box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+            transition: all 0.5s ease;
         }
+        #game-container.deep-sea ~ .modal .modal-content {
+            border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
+        }
+        
         .exp-title { font-size: 1.7em; margin-bottom: 15px; font-weight: bold; }
         .exp-text { font-size: 1.15em; line-height: 1.6; margin-bottom: 25px; text-align: left; color: #b2ebf2; }
-        .next-btn { background-color: #ff4d4d; color: #fff; border: none; border-radius: 10px; padding: 12px 30px; font-size: 1.2em; cursor: pointer; font-weight: bold; }
-        .next-btn:hover { background-color: #ff6666; }
+        .next-btn { background-color: #00e5ff; color: #001220; border: none; border-radius: 10px; padding: 12px 30px; font-size: 1.2em; cursor: pointer; font-weight: bold; transition: 0.3s;}
+        .next-btn:hover { background-color: #80deea; }
+        #game-container.deep-sea ~ .modal .next-btn { background-color: #ff4d4d; color: #fff; }
+        #game-container.deep-sea ~ .modal .next-btn:hover { background-color: #ff6666; }
 
-        #editor-modal .modal-content { max-width: 800px; height: 80vh; display: flex; flex-direction: column; border-color:#00e5ff;}
+        #editor-modal .modal-content { max-width: 800px; height: 80vh; display: flex; flex-direction: column; }
         #json-editor { width: 100%; flex-grow: 1; background: #001f3f; color: #00e5ff; border: 1px solid #00e5ff; padding: 10px; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: none; }
         .editor-btns { display: flex; justify-content: space-between; }
     </style>
@@ -107,14 +143,14 @@
         
         <div id="status-bar">
             <span id="distance-text">距離被吃掉: 5 格</span>
-            <span id="wrong-text">錯誤次數: 0 / 5</span>
+            <span id="wrong-text">連續錯誤: 0 / 5</span>
         </div>
         
         <div id="track-container">🦈🌊🌊🌊🌊⛵</div>
 
         <div id="shark-abilities">
             <button id="btn-dash" class="ability-btn" onclick="toggleDash()">🩸 鯊魚手段：猛衝 (主動)</button>
-            <button id="btn-phase2" class="ability-btn" disabled>🌊 深海區：第二階段 (被動)</button>
+            <button id="btn-phase2" class="ability-btn" disabled>🌊 深海區：第二階段 (未解鎖)</button>
         </div>
 
         <div id="action-msg"></div>
@@ -143,518 +179,4 @@
             <h2 style="color:#00e5ff; margin-top:0;">編輯題庫 (JSON 格式)</h2>
             <p style="font-size:0.9em; text-align:left; color:#b2ebf2; margin-top:0;">修改後儲存即可測試。若要永久生效，請複製回 GitHub。</p>
             <textarea id="json-editor"></textarea>
-            <div class="editor-btns">
-                <button class="edit-btn" onclick="closeEditor()">取消</button>
-                <button class="edit-btn" onclick="resetDefault()" style="color:#ff4d4d; border-color:#ff4d4d;">重置預設</button>
-                <button class="next-btn" style="background-color:#00c853;" onclick="saveEditor()">儲存並重新開始</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // 你提供的專屬題庫（補齊 20 題）
-        const defaultQuestions = [
-            {
-                "q": "在傳統辯論賽制中，負責在比賽最後總結全場交鋒點、重申己方核心價值的辯手稱為：",
-                "o": [
-                    "A. 主辯",
-                    "B. 二辯",
-                    "C. 攻辯",
-                    "D. 結辯"
-                ],
-                "a": 3,
-                "exp": "結辯（第四副辯或總結陳詞）的職責是盤點全場交鋒，梳理己方邏輯並進行價值昇華，不應在此環節提出全新的論據。"
-            },
-            {
-                "q": "辯論賽中，雙方輪流交替發言，節奏最緊湊且允許直接駁斥對方的環節是：",
-                "o": [
-                    "A. 論述",
-                    "B. 攻辯",
-                    "C. 自由辯論",
-                    "D. 台下發問"
-                ],
-                "a": 2,
-                "exp": "自由辯論是雙方陣營共享一定時間，交替站立發言的環節，最考驗臨場反應與團隊配合。"
-            },
-            {
-                "q": "準備一場辯論比賽，全隊拿到辯題後的第一步通常是：",
-                "o": [
-                    "A. 練習發言語氣",
-                    "B. 破題與定義關鍵字",
-                    "C. 撰寫結辯講稿",
-                    "D. 尋找對方的黑材料"
-                ],
-                "a": 1,
-                "exp": "萬丈高樓平地起，「破題與定義」是確立己方討論範圍和底線的第一步，定義錯了整場邏輯都會崩塌。"
-            },
-            {
-                "q": "關於辯論中的「舉證責任」，以下哪一項描述最為準確且符合底層邏輯？",
-                "o": [
-                    "A. 雙方都必須平均地提出同等數量的證據",
-                    "B. 提出主張的一方，有責任提出實質證據來支持其主張",
-                    "C. 為了保證公平，反對別人觀點的一方必須提出反證",
-                    "D. 只有正方需要承擔舉證責任"
-                ],
-                "a": 1,
-                "exp": "「誰主張，誰舉證」是法學與辯論的鐵律。若你提出一個觀點，你就必須拿出證據，而不是要對方去證明「你錯了」。"
-            },
-            {
-                "q": "在政策性辯論中，討論「必要性」時，我們實質上是在探討什麼？",
-                "o": [
-                    "A. 該政策能否徹底解決社會問題",
-                    "B. 目前的社會問題是否深植於現有制度之中，且不改變現有制度就無法解決",
-                    "C. 問題是否帶來了極大的損害",
-                    "D. 該政策的利益是否大於弊端"
-                ],
-                "a": 1,
-                "exp": "必要性探討的是「現狀為何無法自我修復」。如果問題可以透過現有制度解決，就不需要一個全新的政策。"
-            },
-            {
-                "q": "「滑坡謬誤」與正當的「連鎖推論」它們之間最大的區別在於：",
-                "o": [
-                    "A. 滑坡謬誤結果通常是災難性的",
-                    "B. 滑坡謬誤缺乏每個環節之間的必然性與機率考量，而連鎖推論具有嚴謹的因果論證",
-                    "C. 滑坡謬誤是反方技巧，連鎖推論是正方技巧",
-                    "D. 滑坡謬誤推導步驟超過三個"
-                ],
-                "a": 1,
-                "exp": "滑坡謬誤的關鍵在於「無限放大微小的機率」，把不必然發生的 A->B->C 說成絕對會發生。"
-            },
-            {
-                "q": "判斷一個定義是「偷換概念」還是「重新定義」核心標準是：",
-                "o": [
-                    "A. 該定義是否完全對己方立場有利",
-                    "B. 該定義是否偏離了社會大眾的普遍認知及探討語境，純粹為了逃避實質交鋒",
-                    "C. 該定義是否沒有被權威字典收錄",
-                    "D. 該定義是否過於創新"
-                ],
-                "a": 1,
-                "exp": "好的重新定義能賦予辯題新視角；但如果定義嚴重脫離常理，讓辯題失去探討價值，就是惡意偷換概念。"
-            },
-            {
-                "q": "當我們評估一個論點是否具有「唯一性」時，我們在評估什麼？",
-                "o": [
-                    "A. 這個論點是否非常極端",
-                    "B. 這個解決方案帶來的好處，是否只能由我方立場來實現，對方立場無法兼容",
-                    "C. 該論點是否能達到雙贏",
-                    "D. 我方的執行效率是否更高"
-                ],
-                "a": 1,
-                "exp": "如果正方提出政策的好處，反方不推行政策也能達到，那麼這個好處就不具備「唯一性」，正方便無法藉此證明立場。"
-            },
-            {
-                "q": "辯論中常交鋒的「應然」與「可行」層面，以下區分何者最準確？",
-                "o": [
-                    "A. 「應然」代表未來，「可行」代表過去",
-                    "B. 「應然」探討事物在道德/價值上「應該」是怎樣的，「可行」探討事物在現實運作中「實際」是怎樣的",
-                    "C. 「應然」是條件，「可行」是副作用",
-                    "D. 「應然」是感性，「可行」是理性"
-                ],
-                "a": 1,
-                "exp": "應然探討價值觀念與理想標準；實然探討客觀事實與現狀限制。兩者交鋒是辯論的核心。"
-            },
-            {
-                "q": "辯題「中學生應否全面禁用智能手機」。正方提出：「學生自制力差，會沉迷手機導致成績下降」。反方最能有效斬斷其邏輯鏈的回應是：",
-                "o": [
-                    "A. 沉迷是因為家長缺乏陪伴。",
-                    "B. 成績不是衡量學生的唯一標準。",
-                    "C. 禁用手機會剝奪網上學習的權利，得不償失。",
-                    "D. 禁用手機無法解決自制力差的根本問題，學生依然會沉迷電腦；唯有引導正確使用才能鍛鍊自制力。"
-                ],
-                "a": 3,
-                "exp": "D 直接攻擊了根本性的問題。指出即使執行正方政策（禁用），也無法解決原本的問題（自制力差）。"
-            },
-            {
-                "q": "辯題「金錢是萬惡之源」。正方列舉大量因金錢引發的貪污、謀殺案。反方哪種回應策略最能有效拆解對方邏輯？",
-                "o": [
-                    "A. 列舉更多其他原因引發的犯罪。",
-                    "B. 指出金錢也做了很多好事。",
-                    "C. 點出正方混淆了「工具」和「貪婪」萬惡之源是人性貪婪而非金錢。",
-                    "D. 質疑數據來源是否權威。"
-                ],
-                "a": 2,
-                "exp": "C 選項精準切割了「工具」與「人性」，指出對方歸因錯誤。A和B都等於默認了金錢是源頭之一，只是在比重上討價還價。"
-            },
-            {
-                "q": "對方質問：「難道你敢說，你從來沒有因為滑IG而忽略身邊家人嗎？」面對誘導性提問，最佳回應是：",
-                "o": [
-                    "A. 這只是我個人自制力問題。",
-                    "B. 請不要進行人身攻擊。",
-                    "C. 偶爾忽略不代表關係疏遠；社交媒體讓我能隨時關心遠方親友，這種打破地域限制的連結，才是常態的親近。",
-                    "D. 你自己難道就沒有忽略家人嗎？"
-                ],
-                "a": 2,
-                "exp": "不要被對方的特例或情緒勒索困住。C 坦然面對質疑，並將「親近」的定義擴展到更宏觀的常態連結，反客為主。"
-            },
-            {
-                "q": "對方提出極度荒謬且沒數據支持的極端例子（如：吃快餐會導致基因突變）。你接續發言時應如何處理？",
-                "o": [
-                    "A. 花兩分鐘詳細論證為什麼不會突變。",
-                    "B. 簡單指出對方犯了「滑坡謬誤」且缺乏實證。",
-                    "C. 大聲嘲笑對方缺乏常識。",
-                    "D. 順著對方幽默反擊說會變超級英雄。"
-                ],
-                "a": 1,
-                "exp": "對方的荒謬例子往往是「泥巴戰」陷阱。B 是最高效的止損方式，不浪費己方寶貴的申論時間在無意義的假議題上。"
-            },
-            {
-                "q": "辯題「發展經濟比保護環境更重要」。反方說：「如果地球毀滅了，賺再多錢有什麼用？」正方最合適的反駁是：",
-                "o": [
-                    "A. 地球沒那麼脆弱，這是杞人憂天。",
-                    "B. 保護環境需要龐大資金、新能源研發，經濟發展正是實行環保的後盾。",
-                    "C. 發展經濟能推動航天移民火星。",
-                    "D. 經濟崩潰窮人會先餓死。"
-                ],
-                "a": 1,
-                "exp": "B 選項實行了「包容性反駁」。承認環保重要，但論證「經濟是環保的前提」，從而將對方的價值納入我方的邏輯框架下。"
-            },
-            {
-                "q": "對方在自由辯論利用語速連續拋出三個細節問題。你接過麥克風後應該？",
-                "o": [
-                    "A. 同樣極快語速逐一回答。",
-                    "B. 抱怨對方問題過多。",
-                    "C. 用一個底層邏輯統一回應，隨即反問核心問題。",
-                    "D. 只挑最容易的一題回答。"
-                ],
-                "a": 2,
-                "exp": "連珠炮提問通常是為了打亂節奏。C 展現了高度的概括力與控場力，化繁為簡，並重新奪回戰場主導權。"
-            },
-            {
-                "q": "對方結辯試圖用極度煽情的悲慘命案收尾賺取同情。我方結辯應如何化解？",
-                "o": [
-                    "A. 嚴厲指責對方打感情牌。",
-                    "B. 講述一個更悲慘的案件反擊。",
-                    "C. 展現同理心共情該故事，但冷靜點出悲劇正是對方提倡的制度所致。",
-                    "D. 完全無視，繼續念預寫稿。"
-                ],
-                "a": 2,
-                "exp": "面對感性攻勢，強硬反駁顯得冷血。C 做到「順勢而為」，接住對方的情緒，但將肇因歸咎於對方的立場，實現借力打力。"
-            },
-            {
-                "q": "當比賽陷入「定義戰」（雙方各執一詞平行時空）且僵持不下時，最佳的推進策略是：",
-                "o": [
-                    "A. 不斷重複朗讀字典解釋。",
-                    "B. 直接比較雙方定義在現實社會中，哪一個更有現實意義。",
-                    "C. 直接妥協接受對方定義。",
-                    "D. 嚴厲指責對方惡意曲解。"
-                ],
-                "a": 1,
-                "exp": "字典不能解決所有爭端。B 是「比較定義價值」的進階技巧，告訴評判「為什麼用我的定義來討論這場比賽，對社會更有幫助」。"
-            },
-            {
-                "q": "對方逼問：「你到底認為『生命』更重要，還是『自由』更重要？必須選一個！」最能破解此陷阱的話術是：",
-                "o": [
-                    "A. 隨便選一個硬拗。",
-                    "B. 拒絕回答並表示問題極端。",
-                    "C. 指出兩者並非對立。",
-                    "D. 反問對方選什麼。"
-                ],
-                "a": 2,
-                "exp": "這類逼問屬於「非黑即白」的邏輯陷阱。C 直接點破陷阱本質，跳出二元對立框架，展現了更周全的價值觀。"
-            },
-            {
-                "q": "對方舉例：「馬斯克懂物理、編程、商業，所以通才絕對更吃香。」最佳回應是：",
-                "o": [
-                    "A. 馬斯克其實是專才。",
-                    "B. 馬斯克是個別例子。",
-                    "C. 他旗下的員工都是專才。",
-                    "D. 我舉愛因斯坦證明專才好。"
-                ],
-                "a": 1,
-                "exp": "B 選項精準運用了「普遍性 vs 特殊性」的拆解技巧。戳破對方用「倖存者偏差」來概括整體的邏輯謬誤。"
-            },
-            {
-                "q": "【深海區：最終昇華】在激烈的交鋒後，結辯最後的「價值昇華」最忌諱出現哪種情況？",
-                "o": [
-                    "A. 語氣過於激動，甚至流下眼淚，讓整場比賽的氣氛變得非常沉重。",
-                    "B. 引用了太多名人名言，導致整段結詞聽起來像是拼湊而成的文章。",
-                    "C. 昇華的價值與己方整場的邏輯架構毫無關聯，淪為空洞的道德說教。",
-                    "D. 結詞的時間控制不佳，在時間提示鈴響起後還講了十幾秒才結束。"
-                ],
-                "a": 2,
-                "exp": "C 是結辯大忌（價值脫節）。昇華必須是建立在己方實質論證之上的自然推導，否則就像沒有地基的空中樓閣，無法打動評判。"
-            }
-        ];
-
-        let questions = [];
-        let currentIndex = 0;
-        let isAnswering = false;
-
-        // 遊戲狀態
-        let boatDistance = 5; 
-        let wrongCount = 0;
-        let gameStatus = "playing"; 
-
-        // 鯊魚手段狀態
-        let dashAvailable = true;
-        let dashActive = false;
-        let dashSecondChance = false;
-        
-        let phase2Unlocked = false;
-        let phase2Active = false;
-
-        function initGame() {
-            const savedData = localStorage.getItem('debateQuizData');
-            if (savedData) {
-                try { questions = JSON.parse(savedData); } 
-                catch (e) { questions = JSON.parse(JSON.stringify(defaultQuestions)); }
-            } else {
-                questions = JSON.parse(JSON.stringify(defaultQuestions));
-            }
-            startGame();
-        }
-
-        function startGame() {
-            currentIndex = 0;
-            boatDistance = 5;
-            wrongCount = 0;
-            gameStatus = "playing";
-            
-            dashAvailable = true;
-            dashActive = false;
-            dashSecondChance = false;
-            phase2Unlocked = false;
-            phase2Active = false;
-            
-            const btnDash = document.getElementById('btn-dash');
-            btnDash.disabled = false;
-            btnDash.className = 'ability-btn';
-            btnDash.innerText = "🩸 鯊魚手段：猛衝 (主動)";
-
-            const btnPhase2 = document.getElementById('btn-phase2');
-            btnPhase2.disabled = true;
-            btnPhase2.className = 'ability-btn';
-            btnPhase2.innerText = "🌊 深海區：第二階段 (未解鎖)";
-
-            document.getElementById('action-msg').innerText = "提示：點擊右上方可隨時編輯或重置題庫。";
-
-            updateUI();
-            loadQuestion();
-        }
-
-        function updateUI() {
-            document.getElementById('q-counter').innerText = `第 ${currentIndex + 1} 題 / 共 ${questions.length} 題`;
-            document.getElementById('distance-text').innerText = `距離被吃掉: ${boatDistance} 格`;
-            document.getElementById('wrong-text').innerText = `錯誤次數: ${wrongCount} / 5`;
-
-            let safeDist = Math.max(0, boatDistance - 1);
-            let waterAhead = Math.max(0, 15 - safeDist);
-            document.getElementById('track-container').innerText = `🦈` + `🌊`.repeat(safeDist) + `⛵` + `〰️`.repeat(waterAhead);
-
-            // 檢查深海區解鎖 (第11題開始)
-            if (currentIndex >= 10 && !phase2Unlocked && gameStatus === "playing") {
-                phase2Unlocked = true;
-                phase2Active = true; 
-                const btnPhase2 = document.getElementById('btn-phase2');
-                btnPhase2.disabled = false;
-                btnPhase2.classList.add('danger');
-                btnPhase2.innerText = "⚠️ 進入深海區：錯退2格，對進1格！";
-                
-                document.getElementById('action-msg').innerText = "🚨 警告：進入深海區！容錯率大幅降低！";
-                document.getElementById('action-msg').style.color = "#ff1744";
-            }
-        }
-
-        function toggleDash() {
-            if (isAnswering || !dashAvailable) return;
-            dashActive = !dashActive;
-            const btn = document.getElementById('btn-dash');
-            btn.classList.toggle('active', dashActive);
-            
-            let msg = document.getElementById('action-msg');
-            if (dashActive) {
-                msg.innerText = "🩸 鯊魚蓄力猛衝！(若答錯可刪除該選項重答，若再錯退兩格)";
-                msg.style.color = "#ffcc00";
-            } else {
-                msg.innerText = "";
-            }
-        }
-
-        function loadQuestion() {
-            isAnswering = false;
-            dashSecondChance = false;
-            const qData = questions[currentIndex];
-            document.getElementById('question-box').innerText = qData.q;
-            
-            for (let i = 0; i < 4; i++) {
-                const btn = document.getElementById(`opt-${i}`);
-                btn.innerText = qData.o[i];
-                btn.className = 'option-btn'; 
-                btn.disabled = false;
-            }
-            updateUI();
-        }
-
-        function checkAnswer(selectedIndex) {
-            if (isAnswering && !dashSecondChance) return; 
-            
-            const qData = questions[currentIndex];
-            const correctIndex = qData.a;
-            const selectedBtn = document.getElementById(`opt-${selectedIndex}`);
-            
-            let isCorrect = (selectedIndex === correctIndex);
-
-            // 處理猛衝 (第一次答錯)
-            if (dashActive && !isCorrect && !dashSecondChance) {
-                dashSecondChance = true; 
-                selectedBtn.classList.add('wrong');
-                selectedBtn.disabled = true; 
-                
-                let msg = document.getElementById('action-msg');
-                msg.innerText = "💥 鯊魚猛衝落空！你還有一次機會，再錯將退後兩格！";
-                msg.style.color = "#ff4d4d";
-                return; 
-            }
-
-            // --- 正式結算階段 ---
-            isAnswering = true; 
-            const correctBtn = document.getElementById(`opt-${correctIndex}`);
-
-            for (let i = 0; i < 4; i++) {
-                document.getElementById(`opt-${i}`).disabled = true;
-            }
-
-            let movementText = "";
-            let forwardStep = 1;
-            let backwardStep = phase2Active ? 2 : 1; 
-
-            if (dashSecondChance && !isCorrect) {
-                backwardStep = 2;
-            }
-
-            if (isCorrect) {
-                selectedBtn.classList.add('correct');
-                boatDistance += forwardStep;
-                movementText = `⛵ 漂亮！邏輯正確，小船向前行 ${forwardStep} 格！`;
-            } else {
-                selectedBtn.classList.add('wrong');
-                correctBtn.classList.add('correct');
-                boatDistance -= backwardStep;
-                wrongCount++;
-                movementText = `⚠️ 邏輯陷阱！退後 ${backwardStep} 格！鯊魚逼近！`;
-            }
-
-            if (dashActive) {
-                dashActive = false;
-                dashAvailable = false;
-                dashSecondChance = false;
-                const btnDash = document.getElementById('btn-dash');
-                btnDash.disabled = true;
-                btnDash.classList.remove('active');
-                btnDash.innerText = "🩸 猛衝 (已消耗)";
-            }
-            
-            updateUI();
-
-            if (boatDistance <= 0) {
-                gameStatus = "lose_eaten";
-            } else if (wrongCount >= 5) {
-                gameStatus = "lose_mistakes";
-            } else if (currentIndex === questions.length - 1 && isCorrect) {
-                gameStatus = "win";
-            }
-
-            setTimeout(() => {
-                showExplanation(isCorrect, movementText, qData.exp);
-            }, 1200);
-        }
-
-        function showExplanation(isCorrect, moveText, explanation) {
-            const modal = document.getElementById('explanation-modal');
-            const title = document.getElementById('exp-result');
-            const moveDiv = document.getElementById('exp-movement');
-            const text = document.getElementById('exp-text');
-            const nextBtn = document.getElementById('exp-next-btn');
-
-            moveDiv.innerText = moveText;
-
-            if (gameStatus === "playing") {
-                title.innerText = isCorrect ? "✅ 拆解成功" : "❌ 墜入陷阱";
-                title.style.color = isCorrect ? "#00c853" : "#ff1744";
-                nextBtn.innerText = "繼續航行";
-            } else {
-                title.innerText = "🚨 遊戲結束";
-                title.style.color = "#ff4d4d";
-                nextBtn.innerText = "查看結果";
-            }
-            
-            text.innerText = explanation ? `【戰術覆盤】\n${explanation}` : "此題未提供題解。";
-            modal.style.display = 'flex';
-        }
-
-        function handleNextStep() {
-            document.getElementById('explanation-modal').style.display = 'none';
-            document.getElementById('action-msg').innerText = "";
-            
-            if (gameStatus === "playing") {
-                currentIndex++;
-                loadQuestion();
-            } else {
-                showFinalResult();
-            }
-        }
-
-        function showFinalResult() {
-            const modal = document.getElementById('explanation-modal');
-            const title = document.getElementById('exp-result');
-            const moveDiv = document.getElementById('exp-movement');
-            const text = document.getElementById('exp-text');
-            const nextBtn = document.getElementById('exp-next-btn');
-
-            moveDiv.innerText = "";
-
-            if (gameStatus === "win") {
-                title.innerText = "🏆 稱霸深海！";
-                title.style.color = "#ffcc00";
-                text.innerText = `太強了！你成功拆解了所有實戰陷阱，順利擺脫了鯊魚！\n\n最終安全距離：${boatDistance} 格\n總共錯誤：${wrongCount} 次\n你已經具備高階辯手的邏輯素質！`;
-            } else if (gameStatus === "lose_eaten") {
-                title.innerText = "☠️ 葬身魚腹";
-                title.style.color = "#ff1744";
-                text.innerText = `距離歸零，小船被鯊魚無情吞噬！\n你在第 ${currentIndex + 1} 題被邏輯陷阱困住。\n不要氣餒，釐清戰術覆盤後重新出發！`;
-            } else if (gameStatus === "lose_mistakes") {
-                title.innerText = "💥 船體崩潰";
-                title.style.color = "#ff1744";
-                text.innerText = `累積答錯 5 題，船體承受不住深海水壓沉沒了！\n你在第 ${currentIndex + 1} 題止步。\n請仔細檢討每一次的戰術覆盤！`;
-            }
-
-            nextBtn.innerText = "重新挑戰";
-            nextBtn.onclick = () => {
-                modal.style.display = 'none';
-                startGame();
-                nextBtn.onclick = handleNextStep; 
-            };
-            modal.style.display = 'flex';
-        }
-
-        function openEditor() { document.getElementById('editor-modal').style.display = 'flex'; }
-        function closeEditor() { document.getElementById('editor-modal').style.display = 'none'; }
-        
-        function saveEditor() {
-            try {
-                const newJson = document.getElementById('json-editor').value;
-                const parsed = JSON.parse(newJson);
-                if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("必須是陣列 []");
-                localStorage.setItem('debateQuizData', JSON.stringify(parsed));
-                questions = parsed;
-                alert("儲存成功！系統將重新載入遊戲。");
-                closeEditor();
-                startGame();
-            } catch (e) {
-                alert("JSON 格式有誤！\n錯誤訊息: " + e.message);
-            }
-        }
-
-        function resetDefault() {
-            if(confirm("確定要刪除你修改的題目，恢復預設嗎？")) {
-                localStorage.removeItem('debateQuizData');
-                document.getElementById('json-editor').value = JSON.stringify(defaultQuestions, null, 4);
-                questions = JSON.parse(JSON.stringify(defaultQuestions));
-                closeEditor();
-                startGame();
-            }
-        }
-
-        window.onload = initGame;
-    </script>
-</body>
-</html>
+            <div class="editor-btns
