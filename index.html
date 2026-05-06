@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辯論生存戰：鯊魚與小船</title>
+    <style>
+        body {
+            background-color: #001f3f;
+            background-image: linear-gradient(to bottom, #001f3f, #005c97);
+            color: #e0f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        }
+        #game-container {
+            width: 100%; max-width: 800px;
+            background: rgba(0, 30, 60, 0.8);
+            border: 2px solid #00e5ff; border-radius: 15px; padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); text-align: center; position: relative;
+        }
+        h1 { color: #00e5ff; text-shadow: 0 0 10px rgba(0, 229, 255, 0.6); margin-top: 0; }
+        
+        /* 頂部工具列與編輯器按鈕 */
+        .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .edit-btn { background-color: transparent; border: 1px solid #80deea; color: #80deea; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .edit-btn:hover { background-color: #80deea; color: #001f3f; }
+
+        /* 軌道與狀態列 */
+        #status-bar {
+            background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; font-weight: bold; color: #80deea;
+        }
+        #track-container {
+            font-size: 1.8em; letter-spacing: 2px; margin-bottom: 20px;
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 30px; border: 1px solid #005c97;
+            overflow: hidden; white-space: nowrap;
+        }
+        
+        /* 錦囊按鈕 */
+        #lifelines { display: flex; justify-content: space-around; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;}
+        .tool-btn {
+            background-color: #005c97; color: #fff; border: 2px solid #00e5ff;
+            border-radius: 20px; padding: 10px 15px; cursor: pointer; font-weight: bold; flex-grow: 1;
+            transition: all 0.2s;
+        }
+        .tool-btn:hover:not(:disabled) { background-color: #00e5ff; color: #001f3f; }
+        .tool-btn:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; }
+        .tool-btn.active { background-color: #ffd700; color: #000; border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+
+        #action-msg { color: #ffd700; font-weight: bold; min-height: 24px; margin-bottom: 10px; font-size: 1.1em; }
+
+        /* 題目與選項 */
+        #question-box {
+            background-color: rgba(0, 60, 100, 0.6); border: 2px solid #00e5ff; border-radius: 10px;
+            padding: 20px; font-size: 1.25em; margin-bottom: 25px; min-height: 80px;
+            display: flex; align-items: center; justify-content: center; line-height: 1.5;
+        }
+        #options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { #options-grid { grid-template-columns: 1fr; } }
+        
+        .option-btn {
+            background-color: rgba(0, 0, 0, 0.3); color: #fff; border: 2px solid #4dd0e1;
+            border-radius: 15px; padding: 15px 20px; font-size: 1.1em; cursor: pointer;
+            transition: all 0.3s ease; text-align: left; word-break: break-word;
+        }
+        .option-btn:hover:not(:disabled) { background-color: #00838f; border-color: #00e5ff; }
+        .option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .option-btn.correct { background-color: #00c853 !important; border-color: #00e5ff !important; box-shadow: 0 0 15px #00c853; opacity: 1; }
+        .option-btn.wrong { background-color: #d50000 !important; border-color: #ff1744 !important; box-shadow: 0 0 15px #d50000; opacity: 0.8; }
+
+        /* 彈窗樣式 */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 10, 20, 0.95); z-index: 10;
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal-content {
+            background: #002b4a; border: 2px solid #00e5ff; border-radius: 15px; padding: 30px;
+            max-width: 600px; width: 100%; text-align: center; box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+        }
+        .exp-title { font-size: 1.6em; margin-bottom: 15px; font-weight: bold; }
+        .exp-text { font-size: 1.1em; line-height: 1.6; margin-bottom: 25px; text-align: left; color: #b2ebf2; }
+        .next-btn { background-color: #00e5ff; color: #001f3f; border: none; border-radius: 10px; padding: 12px 30px; font-size: 1.2em; cursor: pointer; font-weight: bold; }
+        .next-btn:hover { background-color: #80deea; }
+
+        #editor-modal .modal-content { max-width: 800px; height: 80vh; display: flex; flex-direction: column; }
+        #json-editor { width: 100%; flex-grow: 1; background: #001f3f; color: #00e5ff; border: 1px solid #00e5ff; padding: 10px; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: none; }
+        .editor-btns { display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="header-tools">
+            <button class="edit-btn" onclick="openEditor()">⚙️ 編輯題目</button>
+            <div style="font-weight: bold; color: #b2ebf2;" id="q-counter">第 1 題 / 共 20 題</div>
+        </div>
+
+        <h1>🦈 辯論生存戰 ⛵</h1>
+        
+        <div id="status-bar">
+            <span id="distance-text">距離被吃掉: 5 格</span>
+            <span id="wrong-text">錯誤次數: 0 / 5</span>
+        </div>
+        
+        <div id="track-container">🦈🌊🌊🌊🌊⛵</div>
+
+        <div id="lifelines">
+            <button id="btn-bait" class="tool-btn" onclick="toggleBait()">🐟 錦囊：誘餌</button>
+            <button id="btn-speed" class="tool-btn" onclick="toggleSpeed()">🚀 錦囊：加速</button>
+            <button id="btn-half" class="tool-btn" onclick="use5050()">🌗 錦囊：一半一半</button>
+        </div>
+
+        <div id="action-msg"></div>
+
+        <div id="question-box">載入題目中...</div>
+        
+        <div id="options-grid">
+            <button class="option-btn" onclick="checkAnswer(0)" id="opt-0"></button>
+            <button class="option-btn" onclick="checkAnswer(1)" id="opt-1"></button>
+            <button class="option-btn" onclick="checkAnswer(2)" id="opt-2"></button>
+            <button class="option-btn" onclick="checkAnswer(3)" id="opt-3"></button>
+        </div>
+    </div>
+
+    <div id="explanation-modal" class="modal">
+        <div class="modal-content">
+            <div id="exp-result" class="exp-title"></div>
+            <div id="exp-movement" style="font-size: 1.2em; margin-bottom: 15px; color: #ffd700; font-weight:bold;"></div>
+            <div id="exp-text" class="exp-text"></div>
+            <button id="exp-next-btn" class="next-btn" onclick="handleNextStep()">下一題</button>
+        </div>
+    </div>
+
+    <div id="editor-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:#00e5ff; margin-top:0;">編輯題庫 (JSON 格式)</h2>
+            <p style="font-size:0.9em; text-align:left; color:#b2ebf2; margin-top:0;">修改後點擊儲存。若要永久生效，請將代碼複製回 GitHub。</p>
+            <textarea id="json-editor"></textarea>
+            <div class="editor-btns">
+                <button class="edit-btn" onclick="closeEditor()">取消</button>
+                <button class="edit-btn" onclick="resetDefault()" style="color:#ff4d4d; border-color:#ff4d4d;">重置為預設</button>
+                <button class="next-btn" onclick="saveEditor()">儲存並重新開始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 預設題庫 (與之前相同，縮略顯示)
+        const defaultQuestions = [
+            { "q": "【熱身題】在傳統辯論賽制中，負責在比賽最後總結全場交鋒點、重申己方核心價值的辯手稱為：", "o": [ "A. 一辯", "B. 二辯", "C. 自由辯手", "D. 結辯" ], "a": 3, "exp": "結辯（第四副辯或總結陳詞）的職責是盤點全場交鋒，梳理己方邏輯並進行價值昇華，不應在此環節提出全新的論據。" },
+            { "q": "【熱身題】辯論賽中，雙方輪流交替發言，節奏最緊湊且允許直接駁斥對方的環節是：", "o": [ "A. 申論", "B. 質詢", "C. 自由辯論", "D. 總結" ], "a": 2, "exp": "自由辯論是雙方陣營共享一定時間，交替站立發言的環節，最考驗臨場反應與團隊配合。" },
+            { "q": "【熱身題】準備一場辯論比賽，全隊拿到辯題後的第一步通常是：", "o": [ "A. 練習發言語氣", "B. 破題與定義關鍵字", "C. 撰寫結辯講稿", "D. 尋找對方的黑材料" ], "a": 1, "exp": "萬丈高樓平地起，「破題與定義」是確立己方討論範圍和底線的第一步，定義錯了整場邏輯都會崩塌。" },
+            { "q": "【難度提升】關於辯論中的「舉證責任」，以下哪一項描述最為準確且符合底層邏輯？", "o": [ "A. 雙方都必須平均地提出同等數量的證據", "B. 提出主張的一方，有責任提出實質證據來支持其主張（誰主張，誰舉證）", "C. 為了保證公平，反對別人觀點的一方必須提出反證", "D. 只有正方需要承擔舉證責任" ], "a": 1, "exp": "「誰主張，誰舉證」是法學與辯論的鐵律。若你提出一個觀點，你就必須拿出證據，而不是要對方去證明「你錯了」。" },
+            { "q": "【難度提升】在政策性辯論中，討論「根屬性」（Inherent）時，我們實質上是在探討什麼？", "o": [ "A. 該政策能否徹底解決社會問題", "B. 目前的社會問題是否深植於現有制度之中，且不改變現有制度就無法解決", "C. 問題是否帶來了極大的損害", "D. 該政策的利益是否大於弊端" ], "a": 1, "exp": "根屬性探討的是「現狀為何無法自我修復」。如果問題可以透過現有制度解決，就不需要一個全新的政策。" },
+            { "q": "【難度提升】「滑坡謬誤」與正當的「連鎖推論」在辯論場上十分相似，它們之間最大的區別在於：", "o": [ "A. 滑坡謬誤結果通常是災難性的", "B. 滑坡謬誤缺乏每個環節之間的必然性與機率考量，而連鎖推論具有嚴謹的因果論證", "C. 滑坡謬誤是反方技巧，連鎖推論是正方技巧", "D. 滑坡謬誤推導步驟超過三個" ], "a": 1, "exp": "滑坡謬誤的關鍵在於「無限放大微小的機率」，把不必然發生的 A->B->C 說成絕對會發生。" },
+            { "q": "【難度提升】「偷換概念」和「重新定義」的界線往往很模糊。判斷一個定義是否屬於惡意「偷換概念」的核心標準是：", "o": [ "A. 該定義是否完全對己方立場有利", "B. 該定義是否偏離了社會大眾的普遍認知及探討語境，純粹為了逃避實質交鋒", "C. 該定義是否沒有被權威字典收錄", "D. 該定義是否過於創新" ], "a": 1, "exp": "好的重新定義能賦予辯題新視角；但如果定義嚴重脫離常理，讓辯題失去探討價值，就是惡意偷換概念。" },
+            { "q": "【難度提升】當我們評估一個論點是否具有「排他性」時，我們在評估什麼？", "o": [ "A. 這個論點是否非常極端", "B. 這個解決方案帶來的好處，是否只能由我方立場來實現，對方立場無法兼容", "C. 該論點是否能達到雙贏", "D. 我方的執行效率是否更高" ], "a": 1, "exp": "如果正方提出政策的好處，反方不推行政策也能達到，那麼這個好處就不具備「排他性」，正方便無法藉此得分。" },
+            { "q": "【難度提升】辯論中常交鋒的「應然」與「實然」層面，以下區分何者最準確？", "o": [ "A. 「應然」代表未來，「實然」代表過去", "B. 「應然」探討事物在道德/價值上「應該」是怎樣的，「實然」探討事物在現實運作中「實際」是怎樣的", "C. 「應然」是條件，「實然」是副作用", "D. 「應然」是感性，「實然」是理性" ], "a": 1, "exp": "應然探討價值觀念與理想標準；實然探討客觀事實與現狀限制。兩者交鋒是辯論的核心。" },
+            { "q": "【實戰回應】辯題「中學生應否全面禁用智能手機」。正方提出：「學生自制力差，會沉迷手機導致成績下降」。反方最能有效斬斷其邏輯鏈的回應是：", "o": [ "A. 沉迷是因為家長缺乏陪伴。", "B. 成績不是衡量學生的唯一標準。", "C. 禁用手機會剝奪網上學習的權利，得不償失。", "D. 禁用手機無法解決自制力差的根本問題，學生依然會沉迷電腦；唯有引導正確使用才能鍛鍊自制力。" ], "a": 3, "exp": "D 直接攻擊了正方的「解決力」。指出即使執行正方政策（禁用），也無法解決原本的問題（自制力差），是釜底抽薪的反駁。" },
+            { "q": "【實戰回應】辯題「金錢是萬惡之源」。正方列舉大量因金錢引發的貪污、謀殺案。反方哪種回應策略最能有效拆解對方邏輯？", "o": [ "A. 列舉更多其他原因引發的犯罪。", "B. 指出金錢也做了很多好事。", "C. 點出正方混淆了「金錢作為交易媒介的本質」與「人類對金錢的無盡貪慾」，萬惡之源是人性貪婪而非金錢。", "D. 質疑數據來源是否權威。" ], "a": 2, "exp": "C 選項精準切割了「工具」與「人性」，指出對方歸因錯誤。A和B都等於默認了金錢是源頭之一，只是在比重上討價還價。" },
+            { "q": "【實戰回應】對方質問：「難道你敢說，你從來沒有因為滑IG而忽略身邊家人嗎？」面對個人化誘導提問，最佳回應是：", "o": [ "A. 這只是我個人自制力問題。", "B. 請不要進行人身攻擊。", "C. 偶爾忽略不代表關係疏遠；社交媒體讓我能隨時關心遠方親友，這種打破地域限制的連結，才是常態的親近。", "D. 你自己難道就沒有忽略家人嗎？" ], "a": 2, "exp": "不要被對方的特例或情緒勒索困住。C 坦然面對質疑，並將「親近」的定義擴展到更宏觀的常態連結，反客為主。" },
+            { "q": "【實戰回應】對方提出極度荒謬且沒數據支持的極端例子（如：吃快餐會導致基因突變）。你接續發言時應如何處理？", "o": [ "A. 花兩分鐘詳細論證為什麼不會突變。", "B. 簡單指出對方犯了「滑坡謬誤」且缺乏實證，不隨之起舞，迅速將焦點拉回己方核心戰場。", "C. 大聲嘲笑對方缺乏常識。", "D. 順著對方幽默反擊說會變超級英雄。" ], "a": 1, "exp": "對方的荒謬例子往往是「泥巴戰」陷阱。B 是最高效的止損方式，不浪費己方寶貴的申論時間在無意義的假議題上。" },
+            { "q": "【實戰回應】辯題「發展經濟比保護環境更重要」。反方說：「如果地球毀滅了，賺再多錢有什麼用？」正方最合適的反駁是：", "o": [ "A. 地球沒那麼脆弱，這是杞人憂天。", "B. 保護環境需要龐大資金、新能源研發，沒有經濟發展作後盾，根本無力實行環保。", "C. 發展經濟能推動航天移民火星。", "D. 經濟崩潰窮人會先餓死。" ], "a": 1, "exp": "B 選項實行了「包容性反駁」。承認環保重要，但論證「經濟是環保的前提」，從而將對方的價值納入我方的邏輯框架下。" },
+            { "q": "【實戰回應】對方在自由辯論利用語速連續拋出三個細節問題。你接過麥克風後應該？", "o": [ "A. 同樣極快語速逐一回答。", "B. 抱怨對方問題過多。", "C. 洞察三個問題背後的共同盲點，用一個底層邏輯統一回應，隨即反問核心問題。", "D. 只挑最容易的一題回答。" ], "a": 2, "exp": "連珠炮提問通常是為了打亂節奏。C 展現了高度的概括力與控場力，化繁為簡，並重新奪回戰場主導權。" },
+            { "q": "【實戰回應】當對方（溫和派）指出「激進手段會引發既得利益者反感與社會撕裂」時，激進派最具高度的抗辯是：", "o": [ "A. 溫和派只會一味妥協。", "B. 我們不需要在乎壓迫者的感受。", "C. 歷史上重大平權初期都曾引發撕裂，這種短暫陣痛是打破結構性壓迫必經的代價。", "D. 我們可以一邊激進一邊溫和。" ], "a": 2, "exp": "C 選項將對方的「弊端（社會撕裂）」重新包裝為「必要的代價」，賦予其歷史縱深與正當性，是極高的價值昇華。" },
+            { "q": "【實戰回應】對方結辯試圖用極度煽情的悲慘命案收尾賺取同情。我方結辯應如何化解？", "o": [ "A. 嚴厲指責對方打感情牌。", "B. 講述一個更悲慘的案件反擊。", "C. 展現同理心共情該故事，但冷靜點出悲劇正是對方提倡的制度所致，我方方案才能杜絕重演。", "D. 完全無視，繼續念預寫稿。" ], "a": 2, "exp": "面對感性攻勢，強硬反駁顯得冷血。C 做到「順勢而為」，接住對方的情緒，但將肇因歸咎於對方的立場，實現借力打力。" },
+            { "q": "【實戰回應】當比賽陷入「定義戰」（雙方各執一詞平行時空）且僵持不下時，最佳的推進策略是：", "o": [ "A. 不斷重複朗讀字典解釋。", "B. 暫時抽離定義本身，直接向評判比較：雙方定義在現實社會中，哪一個更有現實意義、更能解決社會痛點。", "C. 直接妥協接受對方定義。", "D. 嚴厲指責對方惡意曲解。" ], "a": 1, "exp": "字典不能解決所有爭端。B 是「比較定義價值」的進階技巧，告訴評判「為什麼用我的定義來討論這場比賽，對社會更有幫助」。" },
+            { "q": "【實戰回應】對方逼問：「你到底認為『生命』更重要，還是『自由』更重要？必須選一個！」最能破解此陷阱的話術是：", "o": [ "A. 隨便選一個硬拗。", "B. 拒絕回答表示問題極端。", "C. 點出虛假對立：「沒有生命的自由是虛無，沒有自由的生命是奴役；我方主張在保障生命底線下最大化自由，拒絕極端二選一。」", "D. 反問對方選什麼。" ], "a": 2, "exp": "這類逼問屬於「非黑即白」的邏輯陷阱。C 直接點破陷阱本質，跳出二元對立框架，展現了更周全的價值觀。" },
+            { "q": "【實戰回應】對方舉例：「馬斯克懂物理、編程、商業，所以通才絕對更吃香。」最佳回應是：", "o": [ "A. 馬斯克其實是專才。", "B. 馬斯克是百年難遇的天才，無法複製。探討社會誰更吃香，應看大眾生存法則，而非極端倖存者偏差的特例。", "C. 他旗下的員工都是專才。", "D. 我舉愛因斯坦證明專才好。" ], "a": 1, "exp": "B 選項精準運用了「普遍性 vs 特殊性」的拆解技巧。戳破對方用「倖存者偏差」來概括整體的邏輯謬誤。" }
+        ];
+
+        let questions = [];
+        let currentIndex = 0;
+        let isAnswering = false;
+
+        // 遊戲狀態與機制
+        let boatDistance = 5; 
+        let wrongCount = 0;
+        let gameStatus = "playing"; // playing, win, lose
+
+        // 錦囊狀態
+        let lifelines = { bait: true, speed: true, half: true };
+        let activeBait = false;
+        let activeSpeed = false;
+
+        function initGame() {
+            const savedData = localStorage.getItem('debateQuizData');
+            if (savedData) {
+                try { questions = JSON.parse(savedData); } 
+                catch (e) { questions = JSON.parse(JSON.stringify(defaultQuestions)); }
+            } else {
+                questions = JSON.parse(JSON.stringify(defaultQuestions));
+            }
+            document.getElementById('json-editor').value = JSON.stringify(questions, null, 4);
+            startGame();
+        }
+
+        function startGame() {
+            currentIndex = 0;
+            boatDistance = 5;
+            wrongCount = 0;
+            gameStatus = "playing";
+            
+            // 重置錦囊
+            lifelines = { bait: true, speed: true, half: true };
+            activeBait = false;
+            activeSpeed = false;
+            
+            document.getElementById('btn-bait').disabled = false;
+            document.getElementById('btn-bait').className = 'tool-btn';
+            document.getElementById('btn-speed').disabled = false;
+            document.getElementById('btn-speed').className = 'tool-btn';
+            document.getElementById('btn-half').disabled = false;
+            document.getElementById('action-msg').innerText = "";
+
+            updateUI();
+            loadQuestion();
+        }
+
+        function updateUI() {
+            // 更新文字
+            document.getElementById('q-counter').innerText = `第 ${currentIndex + 1} 題 / 共 ${questions.length} 題`;
+            document.getElementById('distance-text').innerText = `距離被吃掉: ${boatDistance} 格`;
+            document.getElementById('wrong-text').innerText = `錯誤次數: ${wrongCount} / 5`;
+
+            // 更新軌道 (確保距離不為負數)
+            let safeDist = Math.max(0, boatDistance - 1);
+            let waterAhead = Math.max(0, 15 - safeDist); // 視覺效果：前方水域
+            document.getElementById('track-container').innerText = `🦈` + `🌊`.repeat(safeDist) + `⛵` + `〰️`.repeat(waterAhead);
+        }
+
+        // --- 錦囊功能 ---
+        function toggleBait() {
+            if (isAnswering || !lifelines.bait) return;
+            activeBait = !activeBait;
+            const btn = document.getElementById('btn-bait');
+            btn.classList.toggle('active', activeBait);
+            updateActionMsg();
+        }
+
+        function toggleSpeed() {
+            if (isAnswering || !lifelines.speed) return;
+            activeSpeed = !activeSpeed;
+            const btn = document.getElementById('btn-speed');
+            btn.classList.toggle('active', activeSpeed);
+            updateActionMsg();
+        }
+
+        function use5050() {
+            if (isAnswering || !lifelines.half) return;
+            lifelines.half = false;
+            document.getElementById('btn-half').disabled = true;
+            
+            const qData = questions[currentIndex];
+            let wrongIndices = [0, 1, 2, 3].filter(i => i !== qData.a);
+            wrongIndices.sort(() => Math.random() - 0.5);
+            document.getElementById(`opt-${wrongIndices[0]}`).style.visibility = 'hidden';
+            document.getElementById(`opt-${wrongIndices[1]}`).style.visibility = 'hidden';
+            
+            document.getElementById('action-msg').innerText = "🌗 刪除了兩個錯誤選項！";
+        }
+
+        function updateActionMsg() {
+            let msg = [];
+            if (activeBait) msg.push("🐟 誘餌已掛上 (答錯有第二次機會)");
+            if (activeSpeed) msg.push("🚀 加速已啟動 (答對+2格，答錯-2格)");
+            document.getElementById('action-msg').innerText = msg.join(" | ");
+        }
+
+        function loadQuestion() {
+            isAnswering = false;
+            const qData = questions[currentIndex];
+            document.getElementById('question-box').innerText = qData.q;
+            
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                btn.innerText = qData.o[i];
+                btn.className = 'option-btn'; 
+                btn.disabled = false;
+                btn.style.visibility = 'visible'; 
+            }
+            updateUI();
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (isAnswering) return;
+            isAnswering = true;
+            
+            const qData = questions[currentIndex];
+            const correctIndex = qData.a;
+            const selectedBtn = document.getElementById(`opt-${selectedIndex}`);
+            const correctBtn = document.getElementById(`opt-${correctIndex}`);
+            
+            let isCorrect = (selectedIndex === correctIndex);
+
+            // 處理誘餌錦囊 (答錯且有誘餌)
+            if (!isCorrect && activeBait) {
+                activeBait = false;
+                lifelines.bait = false; // 消耗錦囊
+                document.getElementById('btn-bait').disabled = true;
+                document.getElementById('btn-bait').classList.remove('active');
+                
+                selectedBtn.classList.add('wrong');
+                selectedBtn.disabled = true;
+                
+                document.getElementById('action-msg').innerText = "💥 答錯了！但鯊魚吃掉了誘餌！你還有一次重新選擇的機會！";
+                isAnswering = false; // 允許再次作答
+                return; 
+            }
+
+            // 正常結算
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`opt-${i}`).disabled = true;
+            }
+
+            let movementText = "";
+            let step = activeSpeed ? 2 : 1;
+
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                boatDistance += step;
+                movementText = `⛵ 答對了！小船向前行 ${step} 格！`;
+            } else {
+                selectedBtn.classList.add('wrong');
+                correctBtn.classList.add('correct');
+                boatDistance -= step;
+                wrongCount++;
+                movementText = `⚠️ 答錯了！退後 ${step} 格！鯊魚逼近！`;
+            }
+
+            // 消耗加速錦囊
+            if (activeSpeed) {
+                activeSpeed = false;
+                lifelines.speed = false;
+                document.getElementById('btn-speed').disabled = true;
+                document.getElementById('btn-speed').classList.remove('active');
+            }
+            
+            document.getElementById('action-msg').innerText = "";
+            updateUI();
+
+            // 判斷遊戲狀態
+            if (boatDistance <= 0) {
+                gameStatus = "lose_eaten";
+            } else if (wrongCount >= 5) {
+                gameStatus = "lose_mistakes";
+            } else if (currentIndex === questions.length - 1 && isCorrect) {
+                gameStatus = "win";
+            }
+
+            setTimeout(() => {
+                showExplanation(isCorrect, movementText, qData.exp);
+            }, 1200);
+        }
+
+        function showExplanation(isCorrect, moveText, explanation) {
+            const modal = document.getElementById('explanation-modal');
+            const title = document.getElementById('exp-result');
+            const moveDiv = document.getElementById('exp-movement');
+            const text = document.getElementById('exp-text');
+            const nextBtn = document.getElementById('exp-next-btn');
+
+            moveDiv.innerText = moveText;
+
+            if (gameStatus === "playing") {
+                title.innerText = isCorrect ? "✅ 選擇正確" : "❌ 選擇錯誤";
+                title.style.color = isCorrect ? "#00c853" : "#ff1744";
+                nextBtn.innerText = "繼續航行";
+            } else {
+                title.innerText = "🚨 遊戲結束";
+                title.style.color = "#ffd700";
+                nextBtn.innerText = "查看結果";
+            }
+            
+            text.innerText = explanation ? `【戰術覆盤】\n${explanation}` : "此題未提供題解。";
+            modal.style.display = 'flex';
+        }
+
+        // 題解視窗的按鈕邏輯
+        function handleNextStep() {
+            document.getElementById('explanation-modal').style.display = 'none';
+            
+            if (gameStatus === "playing") {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                showFinalResult();
+            }
+        }
+
+        function showFinalResult() {
+            const modal = document.getElementById('explanation-modal');
+            const title = document.getElementById('exp-result');
+            const moveDiv = document.getElementById('exp-movement');
+            const text = document.getElementById('exp-text');
+            const nextBtn = document.getElementById('exp-next-btn');
+
+            moveDiv.innerText = "";
+
+            if (gameStatus === "win") {
+                title.innerText = "🏆 成功逃脫！";
+                title.style.color = "#ffd700";
+                text.innerText = `太強了！你成功答完 20 題，擺脫了鯊魚的追擊！\n\n最終安全距離：${boatDistance} 格\n總共錯誤：${wrongCount} 次`;
+            } else if (gameStatus === "lose_eaten") {
+                title.innerText = "☠️ 被吃掉了！";
+                title.style.color = "#ff1744";
+                text.innerText = `很遺憾，距離歸零，小船成了鯊魚的午餐！\n你在第 ${currentIndex + 1} 題止步。重新整理邏輯再出發吧！`;
+            } else if (gameStatus === "lose_mistakes") {
+                title.innerText = "💥 船體崩潰！";
+                title.style.color = "#ff1744";
+                text.innerText = `很遺憾，累積答錯 5 題，小船沉沒了！\n你在第 ${currentIndex + 1} 題止步。重新整理邏輯再出發吧！`;
+            }
+
+            nextBtn.innerText = "重新挑戰";
+            nextBtn.onclick = () => {
+                modal.style.display = 'none';
+                startGame();
+                nextBtn.onclick = handleNextStep; // 恢復預設行為
+            };
+            modal.style.display = 'flex';
+        }
+
+        // --- 編輯器相關功能 ---
+        function openEditor() { document.getElementById('editor-modal').style.display = 'flex'; }
+        function closeEditor() { document.getElementById('editor-modal').style.display = 'none'; }
+        
+        function saveEditor() {
+            try {
+                const newJson = document.getElementById('json-editor').value;
+                const parsed = JSON.parse(newJson);
+                if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("必須是包含題目的陣列 []");
+                
+                localStorage.setItem('debateQuizData', JSON.stringify(parsed));
+                questions = parsed;
+                alert("儲存成功！系統將重新載入遊戲。");
+                closeEditor();
+                startGame();
+            } catch (e) {
+                alert("JSON 格式有誤，請檢查括號、逗號是否正確！\n錯誤訊息: " + e.message);
+            }
+        }
+
+        function resetDefault() {
+            if(confirm("確定要刪除你修改的題目，恢復成系統預設的 20 題嗎？")) {
+                localStorage.removeItem('debateQuizData');
+                document.getElementById('json-editor').value = JSON.stringify(defaultQuestions, null, 4);
+                questions = JSON.parse(JSON.stringify(defaultQuestions));
+                alert("已重置為預設題目！");
+                closeEditor();
+                startGame();
+            }
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
