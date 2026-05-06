@@ -133,7 +133,7 @@
             <div style="font-weight: bold; color: #b2ebf2; font-size: 1.2em;" id="q-counter">準備載入...</div>
         </div>
 
-        <h1>🦈 鯊魚的追擊：實戰深海 ⛵</h1>
+        <h1>🦈 鯊魚的追擊 ⛵</h1>
         
         <div id="status-bar">
             <span id="distance-text">距離被吃掉: 5 格</span>
@@ -291,7 +291,7 @@
                 btnPhase2.classList.add('danger');
                 btnPhase2.innerText = "⚠️ 進入深海區：錯退2格，對進1格！";
                 
-                document.getElementById('action-msg').innerText = "🚨 警告：進入深海區！容錯率大幅降低！猛衝失敗將面臨恐怖的 4 格懲罰！";
+                document.getElementById('action-msg').innerText = "🚨 警告：進入深海區！容錯率大幅降低！猛衝迴避失敗將面臨恐怖的 4 格懲罰！";
                 document.getElementById('action-msg').style.color = "#ff1744";
             }
 
@@ -390,7 +390,7 @@
                 selectedBtn.classList.add('correct');
                 boatDistance += forwardStep;
                 consecutiveWrongs = 0; 
-                movementText = `⛵ 漂亮！邏輯正確，小船向前行 ${forwardStep} 格！連續錯誤已重置！`;
+                movementText = `⛵ 漂亮！邏輯正確，小船向前行 ${forwardStep} 格！`;
             } else {
                 selectedBtn.classList.add('wrong');
                 if(correctBtn) correctBtn.classList.add('correct');
