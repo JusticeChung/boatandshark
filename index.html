@@ -14,6 +14,7 @@
             min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
         }
         
+        /* 預設：淺海區 (藍色主題) */
         #game-container {
             width: 100%; max-width: 850px;
             background: rgba(0, 20, 40, 0.85);
@@ -37,6 +38,7 @@
             transition: all 0.8s ease;
         }
 
+        /* 觸發：深海區 (紅色主題) 第10題起 */
         #game-container.deep-sea {
             border-color: #ff4d4d;
             box-shadow: 0 0 35px rgba(255, 77, 77, 0.6);
@@ -49,6 +51,21 @@
         #game-container.deep-sea #track-container {
             border-color: #ff4d4d;
             background: rgba(20, 0, 0, 0.6);
+        }
+
+        /* 終極觸發：死神海域 (暗紅/血紅主題) 最後10題 */
+        #game-container.death-zone {
+            border-color: #b71c1c;
+            box-shadow: 0 0 45px rgba(183, 28, 28, 0.9);
+            background: rgba(30, 0, 5, 0.95);
+        }
+        #game-container.death-zone h1 {
+            color: #ff1744;
+            text-shadow: 0 0 20px rgba(255, 23, 68, 0.9);
+        }
+        #game-container.death-zone #track-container {
+            border-color: #ff1744;
+            background: rgba(20, 0, 0, 0.8);
         }
         
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -72,11 +89,19 @@
         
         #game-container.deep-sea .ability-btn { border-color: #ff4d4d; color: #ff9999; background-color: #4a0000; }
         #game-container.deep-sea .ability-btn.danger { background-color: #800000; color: #fff; animation: pulse 2s infinite; }
+        
+        #game-container.death-zone .ability-btn { border-color: #ff1744; color: #ff1744; background-color: #2a0000; }
+        #game-container.death-zone .ability-btn.danger { background-color: #8b0000; color: #fff; animation: pulse-death 1s infinite; }
 
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(255, 77, 77, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+        }
+        @keyframes pulse-death {
+            0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.8); }
+            70% { box-shadow: 0 0 0 25px rgba(255, 23, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
         }
 
         #action-msg { color: #ffcc00; font-weight: bold; min-height: 28px; margin-bottom: 15px; font-size: 1.15em; }
@@ -112,6 +137,9 @@
         #game-container.deep-sea ~ .modal .modal-content {
             border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
         }
+        #game-container.death-zone ~ .modal .modal-content {
+            border-color: #ff1744; box-shadow: 0 0 40px rgba(255, 23, 68, 0.5);
+        }
         
         .exp-title { font-size: 1.7em; margin-bottom: 15px; font-weight: bold; }
         .exp-text { font-size: 1.15em; line-height: 1.6; margin-bottom: 25px; text-align: left; color: #b2ebf2; }
@@ -119,6 +147,8 @@
         .next-btn:hover { background-color: #80deea; }
         #game-container.deep-sea ~ .modal .next-btn { background-color: #ff4d4d; color: #fff; }
         #game-container.deep-sea ~ .modal .next-btn:hover { background-color: #ff6666; }
+        #game-container.death-zone ~ .modal .next-btn { background-color: #ff1744; color: #fff; }
+        #game-container.death-zone ~ .modal .next-btn:hover { background-color: #d50000; }
 
         #editor-modal .modal-content { max-width: 800px; height: 80vh; display: flex; flex-direction: column; }
         #json-editor { width: 100%; flex-grow: 1; background: #001f3f; color: #00e5ff; border: 1px solid #00e5ff; padding: 10px; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: none; }
@@ -182,7 +212,6 @@
     </div>
 
     <script>
-        // 完美 50 題題庫（已平衡選項長度、套用香港術語、擴展高難度實戰情境）
         const defaultQuestions = [
             {"q": "在傳統辯論賽制中，負責在比賽最後總結全場交鋒點、重申己方核心價值的辯手稱為：", "o": ["A. 負責開篇立論的主辯", "B. 負責展開的第一副辯", "C. 負責交鋒的第二副辯", "D. 負責總結全場的結辯"], "a": 3, "exp": "結辯的職責是盤點全場交鋒，梳理己方邏輯並進行價值昇華，絕不應在此環節提出全新的論據。"},
             {"q": "辯論賽中，雙方輪流交替發言，節奏最緊湊且允許直接駁斥對方的環節是：", "o": ["A. 主辯申論階段", "B. 台下發問環節", "C. 自由辯論環節", "D. 結辯陳詞階段"], "a": 2, "exp": "自由辯論是雙方陣營共享一定時間，交替站立發言的環節，最考驗雙方的臨場反應與團隊配合。"},
@@ -215,6 +244,7 @@
             {"q": "辯題「香港應全面禁止燃油車」。正方主打「減少空氣污染」。反方若要打出「相抗計畫」，何者最有效？", "o": ["A. 強調燃油車是香港經濟命脈，一旦禁止會導致運輸業崩潰，後果不堪設想。", "B. 證明電動車的電池生產與回收過程，同樣會造成極為嚴重的重金屬污染。", "C. 提出「大幅提高燃油稅及排放標準」，證明無須全面禁止也能達到減排目標。", "D. 指出香港目前的充電樁基建嚴重不足，全面禁止燃油車在現階段根本不可行。"], "a": 2, "exp": "C 是一個標準的相抗計畫（Counter-plan）。證明了己方的方案能達到與正方相似的利益，但付出的社會成本更低。"},
             {"q": "當己方主辯的申論被對方第一副辯幾乎全盤摧毀時，我方第二副辯最重要的任務是：", "o": ["A. 徹底放棄主辯原本的邏輯框架，現場即興構思一套全新的論點來進行反擊。", "B. 將主辯的講稿原封不動地再唸一次，堅信只要重複夠多次評判就會買單。", "C. 挑出對方攻擊中最薄弱的一點進行反駁，試圖挽回一點顏面並拖延時間。", "D. 迅速修補主辯邏輯的斷裂處，承認小瑕疵但重建核心防線，穩定全隊軍心。"], "a": 3, "exp": "D 是團隊辯論的靈魂。副辯必須承擔起修補戰線的責任，承認非致命瑕疵反而能讓防線顯得更加堅實。"},
             {"q": "討論「應否立法規管假新聞」時，反方強烈質疑「誰來定義假新聞，政府會藉此打壓異己」。正方如何防禦？", "o": ["A. 強調政府是由市民選出來的，我們應該無條件信任政府的執法絕對公正。", "B. 指出即使有打壓異己的風險，為了社會整體的安寧與秩序，這代價是值得的。", "C. 提出交由獨立的第三方專業機構與司法體系進行裁定，設立嚴謹的制衡機制。", "D. 反擊對方過度被害妄想，現代社會資訊發達，政府根本無法輕易隻手遮天。"], "a": 2, "exp": "C 提供了實質的制度保障。面對濫權的質疑，唯有提出完善的制衡機制，才能消除評判與大眾的疑慮。"},
+            {"q": "對方第二副辯在發言最後十秒突然拋出一個全新且極具煽動性的論點。我方結辯應如何應對？", "o": ["A. 花費整整兩分鐘的時間，詳細且全面地反駁這個突如其來的新論點。", "B. 簡單點出對方在副辯局末才拋出新論點有違交鋒精神，隨即回歸全場總結。", "C. 放棄原定講稿，同樣在結辯時拋出一個全新的論點來與對方互相傷害。", "D. 完全當作沒聽到，不作任何回應，以免幫對方的新論點增加討論熱度。"], "a": 1, "exp": "B 是防禦偷襲的最佳策略。點出對方違規（New argument），讓評判產生警惕，然後專注於己方最重要的總結任務。"},
             {"q": "辯題「港府應推行全民強制器官捐贈（預設默認）」。正方強調拯救生命。反方最核心的價值反撲是：", "o": ["A. 指出香港的醫療資源根本無法處理突然暴增的器官移植手術量。", "B. 質疑捐贈的器官可能會被有心人士濫用，衍生出黑市交易的問題。", "C. 堅守「身體自主權」，強調國家無權在未獲明確同意下預設處置公民遺體。", "D. 提出這會引起市民極大的恐慌與反感，導致大量不必要的社會撕裂。"], "a": 2, "exp": "C 直接從底層的道德權利進行反擊。在牽涉身體權利的辯題中，自主權通常是反方最強大的武器。"},
             {"q": "當對方使用「訴諸同情」的謬誤，不斷描述弱勢群體的慘況來迴避政策質疑時。你應如何破局？", "o": ["A. 直接指出對方的做法非常虛偽，只是在利用弱勢群體來贏得辯論比賽。", "B. 講述另一個群體因為實施該政策而受害的慘況，與對方進行比慘大賽。", "C. 肯定對方的善意，但犀利指出「善良的願望無法掩蓋政策設計的嚴重缺陷」。", "D. 順著對方的話，承認現狀確實很慘，並立刻宣佈己方同意對方的所有觀點。"], "a": 2, "exp": "C 展現了理性的光芒。不否定對方的出發點，但將討論焦點拉回政策的客觀效益與實踐可行性上。"},
             {"q": "在「價值辯論」中，雙方對於辯題的「評判標準（判準）」爭持不下。決定勝負的關鍵通常取決於：", "o": ["A. 哪一方的辯手說話語氣更加堅定、氣勢更加磅礡，能壓倒對方的氣焰。", "B. 哪一方能更清晰地向評判論證，為何己方的判準更符合當下社會的核心利益。", "C. 哪一方能夠找到更多權威字典對辯題字眼進行最古老、最冷僻的學術解釋。", "D. 哪一方能在自由辯論環節中，提出更多讓對方無法回答的刁鑽細節問題。"], "a": 1, "exp": "B 是爭奪判準的核心。判準沒有絕對的對錯，誰能證明自己的尺規更適合量度當下的社會環境，誰就能主導比賽。"},
@@ -249,7 +279,11 @@
         
         let phase2Unlocked = false;
         let phase2Active = false;
+        
+        let phase3Unlocked = false;
+        let phase3Active = false;
 
+        // 【防呆機制】：強制檢查並修復損壞的 LocalStorage 資料
         function initGame() {
             const savedData = localStorage.getItem('debateQuizData');
             if (savedData) {
@@ -282,8 +316,10 @@
             dashSecondChance = false;
             phase2Unlocked = false;
             phase2Active = false;
+            phase3Unlocked = false;
+            phase3Active = false;
             
-            document.getElementById('game-container').classList.remove('deep-sea');
+            document.getElementById('game-container').classList.remove('deep-sea', 'death-zone');
             document.getElementById('action-msg').innerText = "提示：保持選項長度一致，專注分析底層邏輯。";
 
             updateUI();
@@ -299,21 +335,43 @@
             let waterAhead = Math.max(0, 15 - safeDist);
             document.getElementById('track-container').innerText = `🦈` + `🌊`.repeat(safeDist) + `⛵` + `〰️`.repeat(waterAhead);
 
-            // 深海區設定在第 10 題之後 (即 currentIndex 達到 10 時觸發)
-            if (currentIndex >= 10 && !phase2Unlocked && gameStatus === "playing") {
+            // 判斷是否進入死神海域 (最後10題) 或 深海區 (第10題後)
+            let isDeathZone = (currentIndex >= questions.length - 10);
+            let isDeepSea = (currentIndex >= 10);
+
+            const btnPhase2 = document.getElementById('btn-phase2');
+
+            if (isDeathZone && gameStatus === "playing") {
+                phase3Unlocked = true;
+                phase3Active = true;
+                
+                document.getElementById('game-container').classList.add('death-zone');
+                document.getElementById('game-container').classList.remove('deep-sea');
+                
+                btnPhase2.disabled = false;
+                btnPhase2.classList.add('danger');
+                btnPhase2.innerText = "💀 死神海域：答錯鯊魚瞬間貼背！";
+                
+                document.getElementById('action-msg').innerText = "🚨 極度危險：進入最後10題！任何失誤將導致鯊魚瞬間閃現追上！";
+                document.getElementById('action-msg').style.color = "#ff1744";
+
+            } else if (isDeepSea && !phase3Active && gameStatus === "playing") {
                 phase2Unlocked = true;
                 phase2Active = true; 
-                document.getElementById('game-container').classList.add('deep-sea');
                 
-                const btnPhase2 = document.getElementById('btn-phase2');
+                document.getElementById('game-container').classList.add('deep-sea');
+                document.getElementById('game-container').classList.remove('death-zone');
+                
                 btnPhase2.disabled = false;
                 btnPhase2.classList.add('danger');
                 btnPhase2.innerText = "⚠️ 進入深海區：錯退2格，對進1格！";
                 
-                document.getElementById('action-msg').innerText = "🚨 警告：進入深海區！容錯率大幅降低！猛衝迴避失敗將面臨恐怖的 4 格懲罰！";
-                document.getElementById('action-msg').style.color = "#ff1744";
+                document.getElementById('action-msg').innerText = "🚨 警告：進入深海區！容錯率大幅降低！猛衝失敗將面臨恐怖的 4 格懲罰！";
+                document.getElementById('action-msg').style.color = "#ff4d4d";
             }
 
+            // 更新按鈕狀態 (進入深海或死神海域後，猛衝按鈕維持可用，因為你要求深海區開放)
+            // 修正：你說過猛衝在深海區開放且CD變3題，但後面又說「到了深海區便停用功能」，我這裡照你最新的指示「我想在『深海區』開放並且CD時間減至三題可使用一次...退四格」。
             const btnDash = document.getElementById('btn-dash');
             if (dashCooldown > 0) {
                 btnDash.disabled = true;
@@ -333,11 +391,13 @@
             
             let msg = document.getElementById('action-msg');
             if (dashActive) {
-                let penalty = phase2Active ? 4 : 2;
+                // 如果在深海/死神區，懲罰是 4 格
+                let penalty = (phase2Active || phase3Active) ? 4 : 2;
                 msg.innerText = `🩸 鯊魚蓄力猛衝！(若答錯可重答，再錯退 ${penalty} 格。使用後冷卻 3 題)`;
                 msg.style.color = "#ffcc00";
             } else {
                 msg.innerText = "";
+                updateUI(); // 回復原本的警告語句
             }
         }
 
@@ -372,18 +432,20 @@
             
             let isCorrect = (selectedIndex === correctIndex);
 
+            // 處理猛衝第一階段 (第一次答錯)
             if (dashActive && !isCorrect && !dashSecondChance) {
                 dashSecondChance = true; 
                 selectedBtn.classList.add('wrong');
                 selectedBtn.disabled = true; 
                 
-                let penalty = phase2Active ? 4 : 2;
+                let penalty = (phase2Active || phase3Active) ? 4 : 2;
                 let msg = document.getElementById('action-msg');
                 msg.innerText = `💥 鯊魚猛衝落空！你還有一次機會，再錯將狂退 ${penalty} 格！`;
                 msg.style.color = "#ff4d4d";
                 return; 
             }
 
+            // 正式結算
             isAnswering = true; 
             const correctBtn = document.getElementById(`opt-${correctIndex}`);
 
@@ -393,14 +455,15 @@
 
             let movementText = "";
             let forwardStep = 1;
-            let backwardStep = phase2Active ? 2 : 1; 
+            let backwardStep = (phase2Active || phase3Active) ? 2 : 1; 
 
+            // 如果猛衝失敗，強加懲罰
             if (dashSecondChance && !isCorrect) {
-                backwardStep = phase2Active ? 4 : 2; 
+                backwardStep = (phase2Active || phase3Active) ? 4 : 2; 
             }
 
             if (dashActive || dashSecondChance) {
-                dashCooldown = 4; 
+                dashCooldown = 4; // 下一題開始時會扣1，變成CD 3題
                 dashActive = false;
                 dashSecondChance = false;
             }
@@ -413,9 +476,20 @@
             } else {
                 selectedBtn.classList.add('wrong');
                 if(correctBtn) correctBtn.classList.add('correct');
-                boatDistance -= backwardStep;
+                
+                // 死神海域特殊結算機制
+                boatDistance -= backwardStep; // 先扣除基本懲罰
+                
+                if (phase3Active && boatDistance > 1) {
+                    boatDistance = 1; // 強制拉近到身後 1 格
+                    movementText = `💀 致命失誤！鯊魚聞到血腥味，瞬間閃現到船尾！下一題錯即死！`;
+                } else if (phase3Active) {
+                    movementText = `🩸 邏輯崩塌！小船被深淵巨鯊無情吞噬！`;
+                } else {
+                    movementText = `⚠️ 邏輯陷阱！退後 ${backwardStep} 格！鯊魚逼近！`;
+                }
+                
                 consecutiveWrongs++; 
-                movementText = `⚠️ 邏輯陷阱！退後 ${backwardStep} 格！鯊魚逼近！`;
             }
 
             updateUI();
